@@ -6,6 +6,7 @@
 #include "list.h"
 #include "sort_impl.h"
 #include "timsort.h"
+#include "list_sort.h"
 
 typedef struct {
     struct list_head list;
@@ -13,7 +14,7 @@ typedef struct {
     int seq;
 } element_t;
 
-#define SAMPLES 1000
+#define SAMPLES 1000000
 
 static void create_sample(struct list_head *head, element_t *space, int samples)
 {
@@ -112,6 +113,7 @@ int main(void)
 
     test_t tests[] = {
         {.name = "timesort", .impl = timsort},
+        {.name = "list_sort", .impl = list_sort},
         {NULL, NULL},
     };
     test_t *test = tests;

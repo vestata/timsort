@@ -1,2 +1,2 @@
 a:main.c
-	gcc -o main main.c
+	gcc -o main -g main.c

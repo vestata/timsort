@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "list.h"
 #include "sort_impl.h"
@@ -102,7 +103,7 @@ typedef struct {
     test_func_t impl;
 } test_t;
 
-int main(void)
+int main(int argc, char *argv[])
 {
     struct list_head sample_head, warmdata_head, testdata_head;
     int count;
@@ -112,11 +113,16 @@ int main(void)
     srand((uintptr_t) &main);
 
     test_t tests[] = {
-        {.name = "timesort", .impl = timsort},
-        {.name = "list_sort", .impl = list_sort},
+        {.name = "timsort", .impl = timsort},
+        {.name = "listsort", .impl = list_sort},
         {NULL, NULL},
     };
     test_t *test = tests;
+
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s [timsort|list_sort]\n", argv[0]);
+        return 1;
+    }
 
     INIT_LIST_HEAD(&sample_head);
 
@@ -126,22 +132,26 @@ int main(void)
 
     create_sample(&sample_head, samples, nums);
 
-    while (test->impl) {
-        printf("==== Testing %s ====\n", test->name);
-        /* Warm up */
-        INIT_LIST_HEAD(&warmdata_head);
-        INIT_LIST_HEAD(&testdata_head);
-        copy_list(&sample_head, &testdata_head, testdata);
-        copy_list(&sample_head, &warmdata_head, warmdata);
-        test->impl(&count, &warmdata_head, compare);
+    for (test_t *test = tests; test->impl != NULL; test++) {
+        printf("hello\n");
+        if (strcmp(argv[1], test->name) == 0) {
+            printf("==== Testing %s ====\n", test->name);
+            /* Warm up */
+            INIT_LIST_HEAD(&warmdata_head);
+            INIT_LIST_HEAD(&testdata_head);
+            copy_list(&sample_head, &testdata_head, testdata);
+            copy_list(&sample_head, &warmdata_head, warmdata);
+            test->impl(&count, &warmdata_head, compare);
 
-        /* Test */
-        count = 0;
-        test->impl(&count, &testdata_head, compare);
-        printf("  Comparisons:    %d\n", count);
-        printf("  List is %s\n",
-               check_list(&testdata_head, nums) ? "sorted" : "not sorted");
-        test++;
+            /* Test */
+            count = 0;
+            test->impl(&count, &testdata_head, compare);
+            printf("  Comparisons:    %d\n", count);
+            printf("  List is %s\n",
+                check_list(&testdata_head, nums) ? "sorted" : "not sorted");
+
+            break;
+        }
     }
 
     return 0;

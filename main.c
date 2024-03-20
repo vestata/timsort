@@ -17,10 +17,20 @@ typedef struct {
 
 #define SAMPLES 1000000
 
-static void create_sample(struct list_head *head, element_t *space, int samples)
+static void create_sample(struct list_head *head, element_t *space, int samples, bool partialed)
 {
     printf("Creating sample\n");
-    for (int i = 0; i < samples; i++) {
+
+    int partial = partialed ? (samples * 3) / 4 : 0;
+
+    for (int i = 0; i < partial; i++) {
+        element_t *elem = space + i;
+        elem->val = i; // 這裡可以是有序的數據生成方式
+        elem->seq = i;
+        list_add_tail(&elem->list, head);
+    }
+
+    for (int i = partial; i < samples; i++) {
         element_t *elem = space + i;
         elem->val = rand();
         elem->seq = i;
@@ -119,6 +129,12 @@ int main(int argc, char *argv[])
     };
     test_t *test = tests;
 
+    bool partial_sorted = false;
+    if (argc > 2 && strcmp(argv[2], "partial") == 0) {
+        partial_sorted = true;
+        printf("partial_sorted\n");
+    }
+
     if (argc < 2) {
         fprintf(stderr, "Usage: %s [timsort|list_sort]\n", argv[0]);
         return 1;
@@ -130,7 +146,7 @@ int main(int argc, char *argv[])
     element_t *warmdata = malloc(sizeof(*warmdata) * SAMPLES);
     element_t *testdata = malloc(sizeof(*testdata) * SAMPLES);
 
-    create_sample(&sample_head, samples, nums);
+    create_sample(&sample_head, samples, nums, partial_sorted);
 
     for (test_t *test = tests; test->impl != NULL; test++) {
         printf("hello\n");

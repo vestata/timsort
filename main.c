@@ -17,22 +17,23 @@ typedef struct {
 
 #define SAMPLES 1000000
 
-static void create_sample(struct list_head *head, element_t *space, int samples, bool partialed)
+static void create_sample(struct list_head *head, element_t *space, int samples, int mode)
 {
     printf("Creating sample\n");
 
-    int partial = partialed ? (samples * 3) / 4 : 0;
-
-    for (int i = 0; i < partial; i++) {
+    for (int i = 0; i < samples; i++) {
         element_t *elem = space + i;
-        elem->val = i; // 這裡可以是有序的數據生成方式
-        elem->seq = i;
-        list_add_tail(&elem->list, head);
-    }
-
-    for (int i = partial; i < samples; i++) {
-        element_t *elem = space + i;
-        elem->val = rand();
+        switch (mode) {
+            case 0:
+                elem->val = rand();
+                break;
+            case 1:
+                elem->val = (i < (samples * 3) / 4) ? i : rand();
+                break;
+            case 2: 
+                elem->val = (i % 20 == 0) ? rand() : i;
+                break;
+        }
         elem->seq = i;
         list_add_tail(&elem->list, head);
     }
@@ -129,10 +130,15 @@ int main(int argc, char *argv[])
     };
     test_t *test = tests;
 
-    bool partial_sorted = false;
-    if (argc > 2 && strcmp(argv[2], "partial") == 0) {
-        partial_sorted = true;
-        printf("partial_sorted\n");
+    int mode = 0;
+    if (argc > 2) {
+        if (strcmp(argv[2], "partial") == 0) {
+            mode = 1;
+        } else if (strcmp(argv[2], "sparse") == 0) {
+            mode = 2;
+        } else if (strcmp(argv[2], "random") == 0) {
+            mode = 0;
+        }
     }
 
     if (argc < 2) {
@@ -146,10 +152,9 @@ int main(int argc, char *argv[])
     element_t *warmdata = malloc(sizeof(*warmdata) * SAMPLES);
     element_t *testdata = malloc(sizeof(*testdata) * SAMPLES);
 
-    create_sample(&sample_head, samples, nums, partial_sorted);
+    create_sample(&sample_head, samples, nums, mode);
 
     for (test_t *test = tests; test->impl != NULL; test++) {
-        printf("hello\n");
         if (strcmp(argv[1], test->name) == 0) {
             printf("==== Testing %s ====\n", test->name);
             /* Warm up */
